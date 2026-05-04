@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 // import { useAppDispatch, useAppSelector } from "@/hooks/redux.hooks";
 // import { logoutUser } from "@/features/auth/slices/auth.slice";
 import { cn } from "@/lib/utils";
+import { ModeToggle } from "@/components/common/mode-toggle";
 
 export default function Header() {
   //   const dispatch = useAppDispatch();
@@ -135,6 +136,9 @@ export default function Header() {
               </div>
 
               {/* Items */}
+              <div className="p-1.5 space-y-px">
+                <ModeToggle />
+              </div>
               <div className="p-1.5 space-y-px">
                 {menuItems.map(({ label, icon: Icon, action, badge }) => (
                   <button
