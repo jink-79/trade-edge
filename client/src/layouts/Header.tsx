@@ -9,18 +9,26 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-// import { useAppDispatch, useAppSelector } from "@/hooks/redux.hooks";
-// import { logoutUser } from "@/features/auth/slices/auth.slice";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchProfile } from "../features/profileSlice";
+import type { AppDispatch, RootState } from "@/app/store";
 import { cn } from "@/lib/utils";
 import { ModeToggle } from "@/components/common/mode-toggle";
 
 export default function Header() {
-  //   const dispatch = useAppDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  //   const { user } = useAppSelector((s) => s.auth);
+
+  const { data: profile, loading } = useSelector((s: RootState) => s.profile);
+
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Fetch profile once on mount
+  useEffect(() => {
+    dispatch(fetchProfile());
+  }, [dispatch]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -47,27 +55,32 @@ export default function Header() {
 
   const handleLogout = async () => {
     setMenuOpen(false);
-    // await dispatch(logoutUser());
     navigate("/login");
   };
 
-  //   const initials = user?.name
-  //     ?.split(" ")
-  //     .map((n: any) => n[0])
-  //     .join("")
-  //     .slice(0, 2)
-  //     .toUpperCase();
-  const initials = "NU";
+  const fullName =
+    profile?.firstName && profile?.lastName
+      ? `${profile.firstName} ${profile.lastName}`
+      : (profile?.firstName ?? "User");
+
+  const initials =
+    profile?.firstName && profile?.lastName
+      ? `${profile.firstName[0]}${profile.lastName[0]}`.toUpperCase()
+      : (profile?.firstName?.[0]?.toUpperCase() ?? "U");
 
   const menuItems = [
-    { label: "My profile", icon: User, action: () => navigate("/profile") },
-    { label: "Settings", icon: Settings, action: () => navigate("/profile") },
+    { label: "My profile", icon: User, action: () => navigate("/my-profile") },
+    {
+      label: "Settings",
+      icon: Settings,
+      action: () => navigate("/my-profile"),
+    },
     {
       label: "Trade journal",
       icon: BookOpen,
       action: () => navigate("/trades"),
       badge: "247",
-    }, // swap with real trade count from Redux
+    },
   ];
 
   return (
@@ -96,23 +109,40 @@ export default function Header() {
           <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-blue-500 rounded-full border border-card" />
         </button>
 
+        <div className="p-1.5 space-y-px">
+          <ModeToggle />
+        </div>
+
         <div className="w-px h-5 bg-border" />
 
         {/* User menu */}
         <div ref={menuRef} className="relative">
           <button
             onClick={() => setMenuOpen((v) => !v)}
+            disabled={loading}
             className={cn(
               "flex items-center gap-2 pl-2.5 pr-1.5 py-1 rounded-lg border border-border hover:bg-accent transition-colors",
               menuOpen && "bg-accent",
             )}
           >
-            <span className="text-sm font-medium text-foreground hidden sm:block">
-              {"user?.name"}
-            </span>
+            {/* Name — skeleton while loading */}
+            {loading ? (
+              <span className="hidden sm:block h-3.5 w-20 bg-muted rounded animate-pulse" />
+            ) : (
+              <span className="text-sm font-medium text-foreground hidden sm:block">
+                {fullName}
+              </span>
+            )}
+
+            {/* Avatar */}
             <div className="h-7 w-7 rounded-md bg-blue-600/20 flex items-center justify-center text-blue-400 text-xs font-semibold">
-              {initials}
+              {loading ? (
+                <span className="w-3 h-3 rounded-sm bg-blue-400/30 animate-pulse" />
+              ) : (
+                initials
+              )}
             </div>
+
             <ChevronDown
               size={13}
               className={cn(
@@ -128,17 +158,15 @@ export default function Header() {
               {/* User info */}
               <div className="px-3.5 py-3 border-b border-border">
                 <p className="text-sm font-medium text-foreground">
-                  {"user?.name"}
+                  {fullName}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
-                  {"user?.email"}
+                  {profile?.email ?? "—"}
                 </p>
               </div>
 
               {/* Items */}
-              <div className="p-1.5 space-y-px">
-                <ModeToggle />
-              </div>
+
               <div className="p-1.5 space-y-px">
                 {menuItems.map(({ label, icon: Icon, action, badge }) => (
                   <button
