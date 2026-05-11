@@ -1,6 +1,6 @@
-import type { OpenPosition } from "../../features/openPositionsSlice";
+import { useState } from "react";
+import type { OpenTrade } from "../../features/openPositionsSlice";
 import {
-  MoreHorizontal,
   AlertTriangle,
   ArrowUpRight,
   ArrowDownRight,
@@ -10,11 +10,14 @@ import {
   TrendingUp,
   Minus,
   Check,
+  LogOut,
   //   Candlestick,
 } from "lucide-react";
+import ExitPositionModal from "./ExitPositionModal";
 
-export default function OpenPositionsTable({ data }: { data: OpenPosition[] }) {
+export default function OpenPositionsTable({ data }: { data: OpenTrade[] }) {
   console.log(data);
+  const [exitTrade, setExitTrade] = useState<OpenTrade | null>(null);
   return (
     <div className="overflow-x-auto border border-border rounded-xl bg-card">
       <table
@@ -188,10 +191,12 @@ export default function OpenPositionsTable({ data }: { data: OpenPosition[] }) {
                 </div>
                 <div className="mt-1 flex justify-end">
                   <button
-                    className="flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                    aria-label="More options"
+                    onClick={() => setExitTrade(trade)}
+                    className="flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
+                    aria-label="Close position"
+                    title="Close position"
                   >
-                    <MoreHorizontal size={16} />
+                    <LogOut size={14} />
                   </button>
                 </div>
               </td>
@@ -199,6 +204,11 @@ export default function OpenPositionsTable({ data }: { data: OpenPosition[] }) {
           ))}
         </tbody>
       </table>
+      <ExitPositionModal
+        trade={exitTrade}
+        open={!!exitTrade}
+        onClose={() => setExitTrade(null)}
+      />
     </div>
   );
 }
